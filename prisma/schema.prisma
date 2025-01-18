@@ -16,6 +16,7 @@ model user {
   deleted_at DateTime?
 
   user_roles user_role_assignment[]
+  user_onboarding_steps user_onboarding_step[]
 }
 
 model role {
@@ -40,4 +41,92 @@ model user_role_assignment {
   role role @relation(fields: [role_id], references: [id])
 
   @@unique([user_id, role_id])
+}
+
+model onboarding_step {
+  id         Int       @id @default(autoincrement())
+  keyword    String    @unique
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  config onboarding_config[]
+  user_onboarding_step user_onboarding_step[]
+}
+
+model onboarding_config {
+    id         Int       @id @default(autoincrement())
+    step_id Int
+    reference_table String
+    type_save String
+    type_step String
+    created_at DateTime  @default(now())
+    updated_at DateTime  @updatedAt
+    deleted_at DateTime?
+
+    step onboarding_step @relation(fields: [step_id], references: [id], onDelete: Cascade)
+    steps onboarding_step_step[]
+}
+
+model onboarding_step_step {
+    id         Int       @id @default(autoincrement())
+    config_id Int
+    order Int
+    api_route String
+    created_at DateTime  @default(now())
+    updated_at DateTime  @updatedAt
+    deleted_at DateTime?
+
+    config onboarding_config @relation(fields: [config_id], references: [id], onDelete: Cascade)
+    fields onboarding_step_field[]
+}
+
+model onboarding_step_field {
+    id                 Int       @id @default(autoincrement())
+    step_id            Int
+    reference_colun    String
+    external_table     String?
+    external_table_where String?
+    external_table_order String?
+    label              String
+    type               String
+    created_at         DateTime  @default(now())
+    updated_at         DateTime  @updatedAt
+    deleted_at         DateTime?
+
+    config     onboarding_step_step              @relation(fields: [step_id], references: [id], onDelete: Cascade)
+    background onboarding_step_field_background?
+}
+
+model onboarding_step_field_background {
+    id         Int       @id @default(autoincrement())
+    field_id Int @unique
+    placeholder String?
+    required Boolean?
+    read_only Boolean?
+    disabled Boolean?
+    color String?
+    max_length Int?
+    options Json?
+    custon_validate_regex String?
+    size String?
+    block Boolean?
+    created_at DateTime  @default(now())
+    updated_at DateTime  @updatedAt
+    deleted_at DateTime?
+
+    field onboarding_step_field @relation(fields: [field_id], references: [id], onDelete: Cascade)
+}
+
+model user_onboarding_step {
+    id         Int       @id @default(autoincrement())
+    user_id    Int
+    step_id Int
+    status String @default("in_progress")
+    created_at DateTime  @default(now())
+    updated_at DateTime  @updatedAt
+    deleted_at DateTime?
+
+    user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
+    step onboarding_step @relation(fields: [step_id], references: [id], onDelete: Cascade)
 }
